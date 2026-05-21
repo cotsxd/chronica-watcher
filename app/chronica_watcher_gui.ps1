@@ -592,33 +592,33 @@ function Refresh-Dashboard {
   }
   if ($script:backgroundToggleButton) {
     if ($backgroundInfo.Running) {
-      $script:backgroundToggleButton.Text = "Stop Background"
+      $script:backgroundToggleButton.Text = "Background: On"
       $script:backgroundToggleButton.BackColor = $colorDanger
       $script:backgroundToggleButton.ForeColor = [System.Drawing.Color]::White
     } else {
-      $script:backgroundToggleButton.Text = "Start Background"
+      $script:backgroundToggleButton.Text = "Background: Off"
       $script:backgroundToggleButton.BackColor = $colorPrimary
       $script:backgroundToggleButton.ForeColor = [System.Drawing.Color]::White
     }
   }
   if ($script:noticesToggleButton) {
     if ($notificationStatus -eq "paused") {
-      $script:noticesToggleButton.Text = "Resume Notices"
+      $script:noticesToggleButton.Text = "Notices: Paused"
       $script:noticesToggleButton.BackColor = $colorSuccess
       $script:noticesToggleButton.ForeColor = [System.Drawing.Color]::White
     } else {
-      $script:noticesToggleButton.Text = "Pause Notices"
+      $script:noticesToggleButton.Text = "Notices: Active"
       $script:noticesToggleButton.BackColor = $colorWarning
       $script:noticesToggleButton.ForeColor = [System.Drawing.Color]::White
     }
   }
   if ($script:newPagesToggleButton) {
     if ($newPageStatus -eq "on") {
-      $script:newPagesToggleButton.Text = "New Pages Off"
+      $script:newPagesToggleButton.Text = "New Pages: On"
       $script:newPagesToggleButton.BackColor = $colorSoft
       $script:newPagesToggleButton.ForeColor = $colorInk
     } else {
-      $script:newPagesToggleButton.Text = "New Pages On"
+      $script:newPagesToggleButton.Text = "New Pages: Off"
       $script:newPagesToggleButton.BackColor = $colorWarning
       $script:newPagesToggleButton.ForeColor = [System.Drawing.Color]::White
     }
@@ -1219,14 +1219,14 @@ $dashPanel.Height = 150
 $dashPanel.Padding = New-Object System.Windows.Forms.Padding(14)
 $dashPanel.BackColor = $colorPanel
 $dashboardTab.Controls.Add($dashPanel)
-$script:backgroundToggleButton = New-Button "Start Background" { Toggle-BackgroundWatcher } 190 $colorPrimary ([System.Drawing.Color]::White)
+$script:backgroundToggleButton = New-Button "Background: Off" { Toggle-BackgroundWatcher } 190 $colorPrimary ([System.Drawing.Color]::White)
 $dashPanel.Controls.Add($script:backgroundToggleButton)
 $dashPanel.Controls.Add((New-Button "Restart Background" { Restart-BackgroundWatcher } 170 $colorWarning ([System.Drawing.Color]::White)))
 $dashPanel.Controls.Add((New-Button "Test Discord" { Start-WatcherCommand @("--test-discord") "Discord test message" } 150 $colorSuccess ([System.Drawing.Color]::White)))
 $dashPanel.Controls.Add((New-Button "Quiet Cache Rebuild" { Start-WatcherCommand @("--baseline") "Quiet cache rebuild" } 180))
-$script:noticesToggleButton = New-Button "Pause Notices" { Toggle-Notifications } 150 $colorWarning ([System.Drawing.Color]::White)
+$script:noticesToggleButton = New-Button "Notices: Active" { Toggle-Notifications } 150 $colorWarning ([System.Drawing.Color]::White)
 $dashPanel.Controls.Add($script:noticesToggleButton)
-$script:newPagesToggleButton = New-Button "New Pages Off" { Toggle-NewPageAnnouncements } 150
+$script:newPagesToggleButton = New-Button "New Pages: Off" { Toggle-NewPageAnnouncements } 150
 $dashPanel.Controls.Add($script:newPagesToggleButton)
 $dashPanel.Controls.Add((New-Button "Dry Run" { Start-WatcherCommand @("--once", "--dry-run") "Dry run once" } 120))
 $dashPanel.Controls.Add((New-Button "Debug In This Window" { Start-WatcherCommand @() "Continuous watcher in this window" } 180))
