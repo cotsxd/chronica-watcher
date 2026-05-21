@@ -76,6 +76,7 @@ DEFAULT_CONFIG = {
     "cache_dir": "data/chronica-page-cache-fresh",
     "notification_pause_file": "data/notifications-paused.flag",
     "sent_messages_file": "data/sent-messages.json",
+    "intro_sent_file": "data/discord-intro-sent.flag",
     "notify_on_first_seen": False,
     "discord_delay_seconds": 1,
     "discovery_interval_seconds": 300,
@@ -1302,6 +1303,62 @@ def post_discord(webhook_url: str, message: str) -> bool:
     return post_discord_with_powershell(webhook_url, message)
 
 
+def discord_webhook_is_valid(webhook_url: str) -> bool:
+    if not re.match(r"^https://(canary\.|ptb\.)?discord(app)?\.com/api/webhooks/", webhook_url):
+        print("Discord webhook URL does not look like a Discord webhook.", file=sys.stderr, flush=True)
+        return False
+
+    request = urllib.request.Request(
+        webhook_url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 ChronicaDiscordWatcher/1.0",
+        },
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return 200 <= response.status < 300
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        print(f"Discord webhook check failed with HTTP {exc.code}. Response: {body}", file=sys.stderr, flush=True)
+        return False
+    except (urllib.error.URLError, TimeoutError) as exc:
+        print(f"Discord webhook check failed: {exc}", file=sys.stderr, flush=True)
+        return False
+
+
+def generic_intro_message() -> str:
+    return (
+        "Hello! Chronica Watcher is connected.\n\n"
+        "I will post here when watched Chronica campaign pages are updated, "
+        "with a link so everyone can jump straight to the changed page.\n\n"
+        "Hidden or secret-looking pages are skipped when the safety setting is enabled."
+    )
+
+
+def send_generic_intro(config: dict[str, Any]) -> int:
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
+    if not webhook_url:
+        raise RuntimeError("Set DISCORD_WEBHOOK_URL before sending the Discord intro.")
+
+    sent_path = Path(config.get("intro_sent_file", "data/discord-intro-sent.flag"))
+    if sent_path.exists():
+        print("Discord intro has already been sent.", flush=True)
+        return 0
+
+    if not discord_webhook_is_valid(webhook_url):
+        raise RuntimeError("Discord webhook could not be verified. Intro was not sent.")
+
+    if not post_discord(webhook_url, generic_intro_message()):
+        raise RuntimeError("Discord intro message failed. Check the webhook URL and Discord permissions.")
+
+    sent_path.parent.mkdir(parents=True, exist_ok=True)
+    sent_path.write_text(time.strftime("%Y-%m-%d %H:%M:%S") + "\n", encoding="utf-8")
+    print("Discord intro message sent.", flush=True)
+    return 0
+
+
 def record_sent_message(config: dict[str, Any], message: str, url: str, title: str) -> None:
     path = Path(config.get("sent_messages_file", "data/sent-messages.json"))
     try:
@@ -1766,6 +1823,7 @@ def main() -> int:
     parser.add_argument("--list-known-pages", action="store_true", help="List pages already saved in watcher state.")
     parser.add_argument("--status", action="store_true", help="Show saved watcher status and exit.")
     parser.add_argument("--test-discord", action="store_true", help="Send a Discord webhook test message and exit.")
+    parser.add_argument("--send-intro", action="store_true", help="Send the generic Discord intro once and exit.")
     parser.add_argument("--baseline", action="store_true", help="Scan and cache pages without posting Discord messages.")
     parser.add_argument("--test-page", help="Inspect one Chronica page and show what would happen.")
     parser.add_argument("--list-sent", action="store_true", help="Show the last recorded Discord notifications.")
@@ -1786,6 +1844,8 @@ def main() -> int:
     if args.test_discord:
         test_discord_message()
         return 0
+    if args.send_intro:
+        return send_generic_intro(config)
     if args.status:
         show_status(config)
         return 0

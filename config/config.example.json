@@ -27,6 +27,7 @@
   "cache_dir": "data/chronica-page-cache-fresh",
   "notification_pause_file": "data/notifications-paused.flag",
   "sent_messages_file": "data/sent-messages.json",
+  "intro_sent_file": "data/discord-intro-sent.flag",
   "notify_on_first_seen": false,
   "discord_delay_seconds": 1,
   "discovery_interval_seconds": 300,

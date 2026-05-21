@@ -242,6 +242,7 @@ DISCORD_WEBHOOK_URL=$WebhookUrl
   "cache_dir": "data/chronica-page-cache-fresh",
   "notification_pause_file": "data/notifications-paused.flag",
   "sent_messages_file": "data/sent-messages.json",
+  "intro_sent_file": "data/discord-intro-sent.flag",
   "notify_on_first_seen": false,
   "discord_delay_seconds": 1,
   "discovery_interval_seconds": 300,
@@ -255,6 +256,54 @@ DISCORD_WEBHOOK_URL=$WebhookUrl
   }
   $configText = $configText.Replace("YOUR_CAMPAIGN_ID", $CampaignId)
   [System.IO.File]::WriteAllText($configPath, $configText, $utf8NoBom)
+}
+
+function Send-SetupIntroMessage {
+  $runner = Resolve-PythonRunner
+  if (-not $runner) {
+    return @{
+      Success = $false
+      Message = "Could not find Python, so the intro message was not sent."
+    }
+  }
+
+  $arguments = @($runner.Prefix + @("-u", "`"$watcher`"", "--send-intro"))
+  $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+  $startInfo.FileName = $runner.File
+  $startInfo.Arguments = $arguments -join " "
+  $startInfo.WorkingDirectory = $rootDir
+  $startInfo.UseShellExecute = $false
+  $startInfo.RedirectStandardOutput = $true
+  $startInfo.RedirectStandardError = $true
+  $startInfo.CreateNoWindow = $true
+
+  $process = New-Object System.Diagnostics.Process
+  $process.StartInfo = $startInfo
+  $process.Start() | Out-Null
+  $stdout = $process.StandardOutput.ReadToEnd()
+  $stderr = $process.StandardError.ReadToEnd()
+  $process.WaitForExit(60000) | Out-Null
+
+  if (-not $process.HasExited) {
+    try { $process.Kill() } catch {}
+    return @{
+      Success = $false
+      Message = "The Discord intro check timed out. Setup was saved, but no intro was sent."
+    }
+  }
+
+  $message = (($stdout + "`n" + $stderr).Trim())
+  if ($process.ExitCode -eq 0) {
+    return @{
+      Success = $true
+      Message = if ($message) { $message } else { "Discord intro message sent." }
+    }
+  }
+
+  return @{
+    Success = $false
+    Message = if ($message) { $message } else { "Discord intro message failed." }
+  }
 }
 
 function Show-SetupWizard {
@@ -373,6 +422,16 @@ function Show-SetupWizard {
 
     try {
       Write-SetupFiles $campaignId $email $password $webhook
+      $status.ForeColor = $colorMuted
+      $status.Text = "Setup saved. Checking the Discord webhook and sending the intro..."
+      [System.Windows.Forms.Application]::DoEvents()
+      $introResult = Send-SetupIntroMessage
+      if (-not $introResult.Success) {
+        $status.ForeColor = $colorDanger
+        $status.Text = "Setup was saved, but the intro was not sent: $($introResult.Message)"
+        return
+      }
+
       $script:setupSaved = $true
       $wizard.DialogResult = [System.Windows.Forms.DialogResult]::OK
       $wizard.Close()
