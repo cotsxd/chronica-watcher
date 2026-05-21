@@ -1,0 +1,49 @@
+{
+  "site_base_url": "https://chronica.ventures",
+  "login_url": "https://chronica.ventures/login",
+  "sitemap_url": "https://chronica.ventures/sitemap.xml",
+  "requires_login": true,
+  "watched_urls": [
+    "https://chronica.ventures/campaigns/YOUR_CAMPAIGN_ID/characters",
+    "https://chronica.ventures/campaigns/YOUR_CAMPAIGN_ID/kinships",
+    "https://chronica.ventures/campaigns/YOUR_CAMPAIGN_ID/places",
+    "https://chronica.ventures/campaigns/YOUR_CAMPAIGN_ID/developments"
+  ],
+  "fallback_urls": [
+  ],
+  "discover_links_from_watched_pages": true,
+  "link_discovery_max_depth": 2,
+  "link_discovery_max_pages": 1000,
+  "allowed_url_patterns": [
+    "/campaigns/YOUR_CAMPAIGN_ID/characters",
+    "/campaigns/YOUR_CAMPAIGN_ID/kinships",
+    "/campaigns/YOUR_CAMPAIGN_ID/places",
+    "/campaigns/YOUR_CAMPAIGN_ID/developments"
+  ],
+  "check_interval_seconds": 60,
+  "state_file": "data/.chronica-watch-state.json",
+  "known_pages_file": "data/known-pages.json",
+  "lock_file": "data/watcher.lock",
+  "cache_dir": "data/chronica-page-cache-fresh",
+  "notification_pause_file": "data/notifications-paused.flag",
+  "sent_messages_file": "data/sent-messages.json",
+  "notify_on_first_seen": false,
+  "discord_delay_seconds": 1,
+  "discovery_interval_seconds": 300,
+  "max_concurrent_checks": 12,
+  "ignore_url_patterns": [
+    "/login",
+    "/new($|[/?#])",
+    "/edit($|[/?#])",
+    "/guide($|[/?#])",
+    "/admin",
+    "/settings",
+    "\\?page=",
+    "\\?.*(characterfilter|placefilter|questfilter|tagfilter|folder_id)=",
+    "/update_view_settings"
+  ],
+  "log_file": "data/chronica-watcher.log",
+  "skip_hidden_or_secret_pages": true,
+  "ignore_urls": [
+  ]
+}
