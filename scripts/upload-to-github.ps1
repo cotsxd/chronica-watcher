@@ -125,9 +125,16 @@ if (-not $staged) {
   & git commit -m "Initial Chronica Discord Watcher release"
 }
 
-$remoteUrl = Read-Host "Paste the GitHub repository URL, for example https://github.com/your-name/chronica-discord-watcher.git"
-if (-not $remoteUrl -or $remoteUrl -notmatch "^https://github\.com/.+/.+\.git$|^git@github\.com:.+/.+\.git$") {
+$remoteUrl = Read-Host "Paste the GitHub repository URL, for example https://github.com/your-name/chronica-discord-watcher"
+$remoteUrl = $remoteUrl.Trim()
+if (-not $remoteUrl -or $remoteUrl -notmatch "^https://github\.com/[^/]+/[^/\s]+/?$|^https://github\.com/[^/]+/[^/\s]+\.git$|^git@github\.com:[^/]+/[^/\s]+\.git$") {
   throw "That does not look like a GitHub repository URL."
+}
+if ($remoteUrl -match "^https://github\.com/.+/$") {
+  $remoteUrl = $remoteUrl.TrimEnd("/")
+}
+if ($remoteUrl -match "^https://github\.com/.+" -and $remoteUrl -notmatch "\.git$") {
+  $remoteUrl = "$remoteUrl.git"
 }
 
 $existingRemote = (& git remote 2>$null) -contains "origin"
