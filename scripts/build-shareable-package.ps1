@@ -21,7 +21,6 @@ Copy-Item -LiteralPath @(
   "START BACKGROUND WATCHER.cmd",
   "STOP BACKGROUND WATCHER.cmd",
   "KILL FROZEN WATCHER.cmd",
-  "UPLOAD TO GITHUB.cmd",
   ".gitignore",
   "README.md",
   "SIMPLE-README.md"
@@ -44,8 +43,7 @@ Copy-Item -LiteralPath @(
   "scripts\send-discord-intro.ps1",
   "scripts\stop-watcher-background.ps1",
   "scripts\uninstall-windows-startup-shortcut.ps1",
-  "scripts\uninstall-windows-startup-task.ps1",
-  "scripts\upload-to-github.ps1"
+  "scripts\uninstall-windows-startup-task.ps1"
 ) -Destination (Join-Path $packageDir "scripts")
 
 Copy-Item -LiteralPath @(

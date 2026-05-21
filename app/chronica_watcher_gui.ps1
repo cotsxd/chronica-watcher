@@ -590,6 +590,39 @@ function Refresh-Dashboard {
     $script:newPageStatusLabel.Text = "New pages: $newPageStatus"
     $script:newPageStatusLabel.ForeColor = if ($newPageStatus -eq "on") { $colorWarning } else { $colorMuted }
   }
+  if ($script:backgroundToggleButton) {
+    if ($backgroundInfo.Running) {
+      $script:backgroundToggleButton.Text = "Stop Background"
+      $script:backgroundToggleButton.BackColor = $colorDanger
+      $script:backgroundToggleButton.ForeColor = [System.Drawing.Color]::White
+    } else {
+      $script:backgroundToggleButton.Text = "Start Background"
+      $script:backgroundToggleButton.BackColor = $colorPrimary
+      $script:backgroundToggleButton.ForeColor = [System.Drawing.Color]::White
+    }
+  }
+  if ($script:noticesToggleButton) {
+    if ($notificationStatus -eq "paused") {
+      $script:noticesToggleButton.Text = "Resume Notices"
+      $script:noticesToggleButton.BackColor = $colorSuccess
+      $script:noticesToggleButton.ForeColor = [System.Drawing.Color]::White
+    } else {
+      $script:noticesToggleButton.Text = "Pause Notices"
+      $script:noticesToggleButton.BackColor = $colorWarning
+      $script:noticesToggleButton.ForeColor = [System.Drawing.Color]::White
+    }
+  }
+  if ($script:newPagesToggleButton) {
+    if ($newPageStatus -eq "on") {
+      $script:newPagesToggleButton.Text = "New Pages Off"
+      $script:newPagesToggleButton.BackColor = $colorSoft
+      $script:newPagesToggleButton.ForeColor = $colorInk
+    } else {
+      $script:newPagesToggleButton.Text = "New Pages On"
+      $script:newPagesToggleButton.BackColor = $colorWarning
+      $script:newPagesToggleButton.ForeColor = [System.Drawing.Color]::White
+    }
+  }
 
   $dashboardText.Text = @"
 Background watcher: $backgroundStatus
@@ -683,9 +716,30 @@ function Stop-BackgroundWatcher {
   Refresh-Dashboard
 }
 
+function Toggle-BackgroundWatcher {
+  $backgroundInfo = Get-BackgroundWatcherInfo
+  if ($backgroundInfo.Running) {
+    Stop-BackgroundWatcher
+  } else {
+    Start-BackgroundWatcherScript
+  }
+}
+
 function Restart-BackgroundWatcher {
   Run-ScriptCommand "restart-watcher-background.ps1" "Restart background watcher"
   Refresh-Dashboard
+}
+
+function Toggle-Notifications {
+  if (Test-NotificationsPaused) {
+    Resume-Notifications
+  } else {
+    Pause-Notifications
+  }
+}
+
+function Toggle-NewPageAnnouncements {
+  Set-NewPageAnnouncements (-not (Test-NewPageAnnouncementsEnabled))
 }
 
 function Run-ScriptCommand {
@@ -943,16 +997,13 @@ function Add-MenuAction {
 }
 
 $watcherMenu = Add-Menu "Watcher"
-Add-MenuAction $watcherMenu "Start Background Watcher" { Select-ToolTab "Dashboard"; Start-BackgroundWatcherScript } | Out-Null
-Add-MenuAction $watcherMenu "Stop Background Watcher" { Select-ToolTab "Dashboard"; Stop-BackgroundWatcher } | Out-Null
+Add-MenuAction $watcherMenu "Start / Stop Background Watcher" { Select-ToolTab "Dashboard"; Toggle-BackgroundWatcher } | Out-Null
 Add-MenuAction $watcherMenu "Restart Background Watcher" { Select-ToolTab "Dashboard"; Restart-BackgroundWatcher } | Out-Null
 Add-MenuAction $watcherMenu "Debug In This Window" { Select-ToolTab "Dashboard"; Start-WatcherCommand @() "Continuous watcher in this window" } | Out-Null
 Add-MenuAction $watcherMenu "Stop Debug Command" { Stop-WatcherCommand } | Out-Null
 Add-MenuAction $watcherMenu "Quiet Cache Rebuild" { Select-ToolTab "Dashboard"; Start-WatcherCommand @("--baseline") "Quiet cache rebuild" } | Out-Null
-Add-MenuAction $watcherMenu "Pause Discord Notices" { Select-ToolTab "Dashboard"; Pause-Notifications } | Out-Null
-Add-MenuAction $watcherMenu "Resume Discord Notices" { Select-ToolTab "Dashboard"; Resume-Notifications } | Out-Null
-Add-MenuAction $watcherMenu "Turn On New Page Announcements" { Select-ToolTab "Dashboard"; Set-NewPageAnnouncements $true } | Out-Null
-Add-MenuAction $watcherMenu "Turn Off New Page Announcements" { Select-ToolTab "Dashboard"; Set-NewPageAnnouncements $false } | Out-Null
+Add-MenuAction $watcherMenu "Pause / Resume Discord Notices" { Select-ToolTab "Dashboard"; Toggle-Notifications } | Out-Null
+Add-MenuAction $watcherMenu "Toggle New Page Announcements" { Select-ToolTab "Dashboard"; Toggle-NewPageAnnouncements } | Out-Null
 Add-MenuAction $watcherMenu "Dry Run Once" { Select-ToolTab "Dashboard"; Start-WatcherCommand @("--once", "--dry-run") "Dry run once" } | Out-Null
 Add-MenuAction $watcherMenu "Test Discord" { Select-ToolTab "Dashboard"; Start-WatcherCommand @("--test-discord") "Discord test message" } | Out-Null
 
@@ -1168,15 +1219,15 @@ $dashPanel.Height = 150
 $dashPanel.Padding = New-Object System.Windows.Forms.Padding(14)
 $dashPanel.BackColor = $colorPanel
 $dashboardTab.Controls.Add($dashPanel)
-$dashPanel.Controls.Add((New-Button "Start Background Watcher" { Start-BackgroundWatcherScript } 220 $colorPrimary ([System.Drawing.Color]::White)))
-$dashPanel.Controls.Add((New-Button "Stop Background" { Stop-BackgroundWatcher } 160 $colorDanger ([System.Drawing.Color]::White)))
+$script:backgroundToggleButton = New-Button "Start Background" { Toggle-BackgroundWatcher } 190 $colorPrimary ([System.Drawing.Color]::White)
+$dashPanel.Controls.Add($script:backgroundToggleButton)
 $dashPanel.Controls.Add((New-Button "Restart Background" { Restart-BackgroundWatcher } 170 $colorWarning ([System.Drawing.Color]::White)))
 $dashPanel.Controls.Add((New-Button "Test Discord" { Start-WatcherCommand @("--test-discord") "Discord test message" } 150 $colorSuccess ([System.Drawing.Color]::White)))
 $dashPanel.Controls.Add((New-Button "Quiet Cache Rebuild" { Start-WatcherCommand @("--baseline") "Quiet cache rebuild" } 180))
-$dashPanel.Controls.Add((New-Button "Pause Notices" { Pause-Notifications } 140 $colorWarning ([System.Drawing.Color]::White)))
-$dashPanel.Controls.Add((New-Button "Resume Notices" { Resume-Notifications } 150 $colorSuccess ([System.Drawing.Color]::White)))
-$dashPanel.Controls.Add((New-Button "New Pages On" { Set-NewPageAnnouncements $true } 140 $colorWarning ([System.Drawing.Color]::White)))
-$dashPanel.Controls.Add((New-Button "New Pages Off" { Set-NewPageAnnouncements $false } 140))
+$script:noticesToggleButton = New-Button "Pause Notices" { Toggle-Notifications } 150 $colorWarning ([System.Drawing.Color]::White)
+$dashPanel.Controls.Add($script:noticesToggleButton)
+$script:newPagesToggleButton = New-Button "New Pages Off" { Toggle-NewPageAnnouncements } 150
+$dashPanel.Controls.Add($script:newPagesToggleButton)
 $dashPanel.Controls.Add((New-Button "Dry Run" { Start-WatcherCommand @("--once", "--dry-run") "Dry run once" } 120))
 $dashPanel.Controls.Add((New-Button "Debug In This Window" { Start-WatcherCommand @() "Continuous watcher in this window" } 180))
 $dashPanel.Controls.Add((New-Button "Refresh" { Refresh-Dashboard } 110))

@@ -9,7 +9,6 @@ START HERE.cmd                 open the control center
 START BACKGROUND WATCHER.cmd   start watcher without GUI
 STOP BACKGROUND WATCHER.cmd    stop watcher without GUI
 KILL FROZEN WATCHER.cmd        force-close stuck watcher/GUI processes
-UPLOAD TO GITHUB.cmd           publish the source project to a GitHub repo
 ```
 
 The GUI is a control panel. The background watcher keeps running after the GUI closes.
@@ -129,13 +128,3 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build-shareable-package.ps1
 ```
 
 The package excludes `config/.env`, `config/config.json`, `data/`, and `archive/`.
-
-## GitHub Upload
-
-Create an empty GitHub repository first, then double-click:
-
-```text
-UPLOAD TO GITHUB.cmd
-```
-
-The uploader checks that private/generated files are ignored, commits the safe source files, asks for the GitHub repo URL, and pushes to `main`.

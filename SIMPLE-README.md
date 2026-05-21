@@ -104,16 +104,6 @@ scripts/build-shareable-package.ps1
 
 The zip it creates does not include your `.env`, live config, cache, logs, or state files.
 
-## Upload To GitHub
-
-Create an empty GitHub repository, then double-click:
-
-```text
-UPLOAD TO GITHUB.cmd
-```
-
-Paste the GitHub repo URL when asked. The uploader checks that private files are ignored before pushing.
-
 ## Private Settings
 
 Secrets live in:
